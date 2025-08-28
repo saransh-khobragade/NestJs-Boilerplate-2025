@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -37,24 +37,27 @@ export class UsersService {
   async findOne(id: UUID): Promise<User> {
     const user = this.users.find(x=>x.id == id)
     if (!user) {
-      throw new Error(`User with id ${id} not found`)
+      throw new NotFoundException(`User with id ${id} not found`)
     }
     return Promise.resolve(user)
   }
 
   async update(id: UUID, updateUserDto: UpdateUserDto): Promise<User> {
-    const index = this.users.findIndex(x=>x.id == id)
-    if (index === -1) {
-      throw new Error(`User with id ${id} not found`)
+    const user = this.users.find(x=>x.id == id)
+    
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`)
     }
-    this.users[index] = {id,...updateUserDto}
+
+    const index = this.users.indexOf(user)
+    this.users[index] = {...user,...updateUserDto}
     return Promise.resolve(this.users[index])
   }
 
   async remove(id: UUID): Promise<void> {
     const index = this.users.findIndex(x=>x.id == id)
     if (index === -1) {
-      throw new Error(`User with id ${id} not found`)
+      throw new NotFoundException(`User with id ${id} not found`)
     }
     this.users.splice(index, 1)
     return Promise.resolve()
